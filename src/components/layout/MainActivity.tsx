@@ -8,14 +8,12 @@ const MainLayout = () => {
   const loadBookmarks = useBookmarkStore((state) => state.loadBookmarks);
   
   useEffect(() => {
-    // Load bookmarks when app starts
-    console.log('🚀 App starting - loading bookmarks...');
     loadBookmarks();
   }, []);
  
   return (
     <NavigationContainer>
-      <View style={{ flex: 1, backgroundColor: '#fff' }}>
+      <View style={{ flex: 1, backgroundColor: '#0C0C0F' }}>
         <StatusBar barStyle="dark-content" />
         <StackNavigation />
       </View>

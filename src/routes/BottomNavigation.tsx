@@ -7,9 +7,9 @@ import Bookmarks from '../screens/Bookmarks/Bookmarks';
 
 const BottomTabs = createBottomTabNavigator();
 
-const ACTIVE_BG_COLOR = '#305FA1';
-const ACTIVE_ICON_COLOR = '#fff';
-const INACTIVE_ICON_COLOR = '#888';
+const ACTIVE_BG_COLOR = '#FF4D00';
+const ACTIVE_ICON_COLOR = '#FFFFFF';
+const INACTIVE_ICON_COLOR = '#55556A';
 
 export const BottomNavigation = () => {
   const { width } = useWindowDimensions();
@@ -34,19 +34,27 @@ export const BottomNavigation = () => {
           lazy: true,
           headerShown: false,
           tabBarStyle: {
-            height: 68,
-            paddingBottom: 7,
-            paddingTop: 17,
-            backgroundColor: '#F7F7F7',
-            borderTopWidth: 0,
+            backgroundColor: '#16161D',
+            borderTopWidth: 0,        // remove border
             elevation: 0,
             marginHorizontal: 17,
             borderRadius: 60,
-            marginBottom: Platform.OS === 'android' ? 10 : 16,
+            marginBottom: Platform.OS === 'android' ? 17 : 16,
             paddingHorizontal: 5,
             overflow: 'visible',
+            height: 68,
+            paddingBottom: 5,
+            paddingTop: 17,
+            position: 'absolute',    // ← add this
+            bottom: 0,               // ← add this
+            left: 0,                 // ← add this
+            right: 0,                // ← add this
           },
+
           tabBarShowLabel: false,
+          tabBarBackground: () => (
+            <View style={{ flex: 1, backgroundColor: 'transparent' }} />
+          ),
           tabBarIcon: ({ focused }) => {
             const translateX = isFirst ? 15 : isLast ? -15 : 0;
 

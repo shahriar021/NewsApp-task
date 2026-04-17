@@ -18,21 +18,20 @@ import { getRelativeTime } from '../../utils/storyUtils';
 const ArticleDetail = () => {
   const route = useRoute();
   const navigation = useNavigation();
-  
+
   const storyId = route.params?.storyId;
-  
+
   const { stories, fetchStoryDetails } = useNewsStore();
   const story = storyId ? stories[storyId] : null;
-  
+
   const [loading, setLoading] = useState(!story);
   const [error, setError] = useState(null);
-  
-  // Use the bookmark store - CORRECT WAY
+
   const bookmarks = useBookmarkStore((state) => state.bookmarks);
   const toggleBookmark = useBookmarkStore((state) => state.toggleBookmark);
-  
+
   const isBookmarked = bookmarks.includes(storyId);
-  
+
   useEffect(() => {
     if (storyId && !story) {
       fetchStoryDetails(storyId)
@@ -45,10 +44,9 @@ const ArticleDetail = () => {
       setLoading(false);
     }
   }, [storyId, story, fetchStoryDetails]);
-  
+
   const handleShare = async () => {
     if (!story) return;
-    
     try {
       await Share.share({
         message: `${story.title || ''}\n${story.url || ''}`,
@@ -58,13 +56,12 @@ const ArticleDetail = () => {
       console.log('Error sharing:', error);
     }
   };
-  
+
   const openLink = async () => {
     if (!story?.url) {
       Alert.alert('No Link', 'This article has no external link.');
       return;
     }
-    
     try {
       const supported = await Linking.canOpenURL(story.url);
       if (supported) {
@@ -77,7 +74,7 @@ const ArticleDetail = () => {
       Alert.alert('Error', 'Failed to open the link');
     }
   };
-  
+
   const handleBookmark = async () => {
     if (storyId) {
       await toggleBookmark(storyId);
@@ -87,19 +84,25 @@ const ArticleDetail = () => {
       );
     }
   };
-  
+
   useLayoutEffect(() => {
     if (!story?.id) return;
-    
     navigation.setOptions({
+      headerStyle: {
+        backgroundColor: '#16161D',
+        elevation: 0,
+        shadowOpacity: 0,
+        borderBottomWidth: 1,
+        borderBottomColor: '#2A2A36',
+      },
+      headerTintColor: '#F0F0F5',
       headerRight: () => (
         <View style={styles.headerButtons}>
           <TouchableOpacity onPress={handleShare} style={styles.iconButton}>
-            <Text style={styles.buttonText}>📤</Text>
+            <Text style={styles.headerIcon}>📤</Text>
           </TouchableOpacity>
-          
           <TouchableOpacity onPress={handleBookmark} style={styles.iconButton}>
-            <Text style={[styles.buttonText, isBookmarked && styles.activeText]}>
+            <Text style={[styles.headerIcon, isBookmarked && styles.bookmarkedIcon]}>
               {isBookmarked ? '★' : '☆'}
             </Text>
           </TouchableOpacity>
@@ -107,19 +110,20 @@ const ArticleDetail = () => {
       ),
     });
   }, [navigation, handleShare, handleBookmark, isBookmarked, story?.id]);
-  
+
   if (loading) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#FF6600" />
+        <ActivityIndicator size="large" color="#FF4D00" />
         <Text style={styles.loadingText}>Loading article...</Text>
       </View>
     );
   }
-  
+
   if (error || !story) {
     return (
       <View style={styles.centerContainer}>
+        <Text style={styles.errorEmoji}>⚠️</Text>
         <Text style={styles.errorText}>{error || 'Story not found'}</Text>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Text style={styles.backButtonText}>Go Back</Text>
@@ -127,49 +131,71 @@ const ArticleDetail = () => {
       </View>
     );
   }
-  
+
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <Text style={styles.title}>{story.title || 'No Title'}</Text>
-      
-      <View style={styles.metaInfo}>
-        <View style={styles.authorContainer}>
-          <Text style={styles.authorLabel}>Author:</Text>
-          <Text style={styles.author}>{story.by || 'Unknown'}</Text>
-        </View>
-        
-        <View style={styles.statsContainer}>
-          <View style={styles.statItem}>
-            <Text style={styles.statLabel}>⭐ Score:</Text>
-            <Text style={styles.statValue}>{story.score || 0}</Text>
-          </View>
-          
-          <View style={styles.statItem}>
-            <Text style={styles.statLabel}>🕒 Posted:</Text>
-            <Text style={styles.statValue}>
-              {story.time ? getRelativeTime(story.time) : 'Unknown'}
-            </Text>
-          </View>
-          
-          {story.descendants > 0 && (
-            <View style={styles.statItem}>
-              <Text style={styles.statLabel}>💬 Comments:</Text>
-              <Text style={styles.statValue}>{story.descendants}</Text>
-            </View>
-          )}
-        </View>
+    <ScrollView
+      style={styles.container}
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={styles.content}
+    >
+      {/* Domain tag */}
+      <View style={styles.domainTag}>
+        <Text style={styles.domainText}>HACKER NEWS</Text>
       </View>
-      
-      {story.url && (
-        <TouchableOpacity onPress={openLink} style={styles.linkButton}>
-          <Text style={styles.linkText}>🌐 Open Article</Text>
+
+      {/* Title */}
+      <Text style={styles.title}>{story.title || 'No Title'}</Text>
+
+      {/* Author row */}
+      <View style={styles.authorRow}>
+        <View style={styles.avatar}>
+          <Text style={styles.avatarText}>
+            {story.by?.charAt(0).toUpperCase()}
+          </Text>
+        </View>
+        <Text style={styles.author}>{story.by || 'Unknown'}</Text>
+      </View>
+
+      {/* Stats row */}
+      <View style={styles.statsRow}>
+        <View style={styles.statBadge}>
+          <Text style={styles.statIcon}>▲</Text>
+          <Text style={styles.statValue}>{story.score || 0}</Text>
+          <Text style={styles.statLabel}>points</Text>
+        </View>
+
+        <View style={styles.statBadge}>
+          <Text style={styles.statIcon}>🕒</Text>
+          <Text style={styles.statValue}>
+            {story.time ? getRelativeTime(story.time) : 'Unknown'}
+          </Text>
+        </View>
+
+        {story.descendants > 0 && (
+          <View style={styles.statBadge}>
+            <Text style={styles.statIcon}>💬</Text>
+            <Text style={styles.statValue}>{story.descendants}</Text>
+            <Text style={styles.statLabel}>comments</Text>
+          </View>
+        )}
+      </View>
+
+      {/* Divider */}
+      <View style={styles.divider} />
+
+      {/* Link button */}
+      {story.url ? (
+        <TouchableOpacity onPress={openLink} style={styles.linkButton} activeOpacity={0.85}>
+          <View style={styles.linkTop}>
+            <Text style={styles.linkIcon}>🌐</Text>
+            <Text style={styles.linkLabel}>Open Article</Text>
+            <Text style={styles.linkArrow}>→</Text>
+          </View>
           <Text style={styles.urlText} numberOfLines={2}>
             {story.url}
           </Text>
         </TouchableOpacity>
-      )}
-      
-      {!story.url && (
+      ) : (
         <View style={styles.noLinkContainer}>
           <Text style={styles.noLinkText}>No external link available</Text>
         </View>
@@ -181,131 +207,209 @@ const ArticleDetail = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    padding: 20,
+    backgroundColor: '#0C0C0F',
   },
+  content: {
+    padding: 20,
+    paddingBottom: 48,
+  },
+
+  // center states
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: '#0C0C0F',
     padding: 20,
+    gap: 12,
   },
+  errorEmoji: {
+    fontSize: 48,
+    marginBottom: 8,
+  },
+  loadingText: {
+    marginTop: 12,
+    color: '#9090A8',
+    fontSize: 14,
+  },
+  errorText: {
+    color: '#FF4560',
+    fontSize: 15,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  backButton: {
+    marginTop: 8,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    backgroundColor: '#FF4D00',
+    borderRadius: 999,
+  },
+  backButtonText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 15,
+  },
+
+  // header
   headerButtons: {
     flexDirection: 'row',
     marginRight: 10,
+    gap: 4,
   },
   iconButton: {
-    marginLeft: 20,
-    padding: 5,
+    marginLeft: 8,
+    padding: 6,
+    backgroundColor: '#252532',
+    borderRadius: 8,
   },
-  buttonText: {
-    color: '#FF6600',
-    fontSize: 24,
+  headerIcon: {
+    fontSize: 18,
+    color: '#F0F0F5',
   },
-  activeText: {
-    color: '#FFD700',
+  bookmarkedIcon: {
+    color: '#FFB800',
   },
+
+  // domain tag
+  domainTag: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#FF4D0020',
+    borderWidth: 1,
+    borderColor: '#FF4D0040',
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    marginBottom: 16,
+  },
+  domainText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#FF4D00',
+    letterSpacing: 1.5,
+  },
+
+  // title
   title: {
-    fontSize: 26,
-    fontWeight: 'bold',
-    marginBottom: 20,
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#F0F0F5',
     lineHeight: 34,
-    color: '#000',
+    letterSpacing: -0.4,
+    marginBottom: 20,
   },
-  metaInfo: {
-    marginBottom: 25,
-    paddingBottom: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  authorContainer: {
+
+  // author
+  authorRow: {
     flexDirection: 'row',
-    marginBottom: 12,
     alignItems: 'center',
+    gap: 10,
+    marginBottom: 20,
   },
-  authorLabel: {
+  avatar: {
+    width: 34,
+    height: 34,
+    borderRadius: 999,
+    backgroundColor: '#FF4D0025',
+    borderWidth: 1,
+    borderColor: '#FF4D0050',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarText: {
     fontSize: 14,
-    color: '#666',
-    marginRight: 8,
+    fontWeight: '800',
+    color: '#FF4D00',
   },
   author: {
-    fontSize: 14,
-    color: '#FF6600',
+    fontSize: 15,
     fontWeight: '600',
+    color: '#9090A8',
   },
-  statsContainer: {
+
+  // stats
+  statsRow: {
     flexDirection: 'row',
+    gap: 8,
     flexWrap: 'wrap',
-    marginTop: 5,
+    marginBottom: 24,
   },
-  statItem: {
+  statBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 20,
-    marginBottom: 8,
+    gap: 5,
+    backgroundColor: '#1E1E28',
+    borderWidth: 1,
+    borderColor: '#2A2A36',
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
   },
-  statLabel: {
-    fontSize: 13,
-    color: '#999',
-    marginRight: 5,
+  statIcon: {
+    fontSize: 12,
   },
   statValue: {
     fontSize: 13,
-    color: '#333',
+    fontWeight: '700',
+    color: '#F0F0F5',
+  },
+  statLabel: {
+    fontSize: 12,
+    color: '#55556A',
     fontWeight: '500',
   },
-  linkButton: {
-    marginTop: 10,
-    padding: 18,
-    backgroundColor: '#f8f8f8',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
+
+  // divider
+  divider: {
+    height: 1,
+    backgroundColor: '#2A2A36',
+    marginBottom: 24,
   },
-  linkText: {
-    color: '#FF6600',
-    fontWeight: 'bold',
+
+  // link
+  linkButton: {
+    backgroundColor: '#1E1E28',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#2A2A36',
+    padding: 18,
+  },
+  linkTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 10,
+  },
+  linkIcon: {
     fontSize: 16,
-    marginBottom: 8,
+  },
+  linkLabel: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FF4D00',
+  },
+  linkArrow: {
+    fontSize: 18,
+    color: '#FF4D00',
+    fontWeight: '700',
   },
   urlText: {
-    color: '#0066cc',
+    color: '#9090A8',
     fontSize: 12,
     lineHeight: 18,
   },
   noLinkContainer: {
-    marginTop: 10,
     padding: 18,
-    backgroundColor: '#f8f8f8',
-    borderRadius: 12,
+    backgroundColor: '#1E1E28',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#2A2A36',
     alignItems: 'center',
   },
   noLinkText: {
-    color: '#999',
+    color: '#55556A',
     fontSize: 14,
-  },
-  loadingText: {
-    marginTop: 12,
-    color: '#666',
-    fontSize: 14,
-  },
-  errorText: {
-    color: '#ff4444',
-    fontSize: 16,
-    marginBottom: 15,
-    textAlign: 'center',
-  },
-  backButton: {
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    backgroundColor: '#FF6600',
-    borderRadius: 8,
-  },
-  backButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 16,
   },
 });
 

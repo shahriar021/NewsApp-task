@@ -5,7 +5,19 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from 'react-native';
-import { colors, spacing, typography, layout } from '../../theme';
+import { colors, spacing, layout } from '../../theme';
+
+interface ButtonProps {
+  title: string;
+  onPress: () => void;
+  loading?: boolean;
+  disabled?: boolean;
+  variant?: 'primary' | 'secondary' | 'outline' | 'danger';
+  size?: 'small' | 'medium' | 'large';
+  fullWidth?: boolean;
+  style?: any;
+  textStyle?: any;
+}
 
 export const Button = ({
   title,
@@ -17,54 +29,29 @@ export const Button = ({
   fullWidth = false,
   style,
   textStyle,
-}) => {
-  const variants = {
-    primary: {
-      background: colors.primary,
-      text: colors.white,
-    },
-    secondary: {
-      background: colors.gray[100],
-      text: colors.gray[800],
-    },
-    outline: {
-      background: 'transparent',
-      text: colors.primary,
-      border: colors.primary,
-    },
-    danger: {
-      background: colors.error,
-      text: colors.white,
-    },
-  };
-  
-  const sizes = {
-    small: {
-      paddingVertical: spacing[8],
-      paddingHorizontal: spacing[12],
-      fontSize: typography.small.fontSize,
-    },
-    medium: {
-      paddingVertical: spacing[12],
-      paddingHorizontal: spacing[20],
-      fontSize: typography.body.fontSize,
-    },
-    large: {
-      paddingVertical: spacing[16],
-      paddingHorizontal: spacing[24],
-      fontSize: typography.bodyBold.fontSize,
-    },
-  };
-  
+}: ButtonProps) => {
+  const v = {
+    primary: { bg: colors.primary, text: colors.white, border: colors.primary },
+    secondary: { bg: colors.card, text: colors.textPrimary, border: colors.border },
+    outline: { bg: 'transparent', text: colors.primary, border: colors.primary },
+    danger: { bg: colors.error, text: colors.white, border: colors.error },
+  }[variant];
+
+  const s = {
+    small: { py: spacing[8], px: spacing[14], fontSize: 13 },
+    medium: { py: spacing[12], px: spacing[20], fontSize: 15 },
+    large: { py: spacing[16], px: spacing[24], fontSize: 16 },
+  }[size];
+
   return (
     <TouchableOpacity
       style={[
-        styles.button,
-        { backgroundColor: variants[variant].background },
-        sizes[size],
-        variant === 'outline' && {
-          borderWidth: 1,
-          borderColor: variants[variant].border,
+        styles.base,
+        {
+          backgroundColor: v.bg,
+          borderColor: v.border,
+          paddingVertical: s.py,
+          paddingHorizontal: s.px,
         },
         fullWidth && styles.fullWidth,
         disabled && styles.disabled,
@@ -75,16 +62,9 @@ export const Button = ({
       activeOpacity={0.8}
     >
       {loading ? (
-        <ActivityIndicator color={variants[variant].text} />
+        <ActivityIndicator color={v.text} size="small" />
       ) : (
-        <Text
-          style={[
-            styles.text,
-            { color: variants[variant].text },
-            { fontSize: sizes[size].fontSize },
-            textStyle,
-          ]}
-        >
+        <Text style={[styles.text, { color: v.text, fontSize: s.fontSize }, textStyle]}>
           {title}
         </Text>
       )}
@@ -93,18 +73,13 @@ export const Button = ({
 };
 
 const styles = StyleSheet.create({
-  button: {
-    borderRadius: layout.borderRadius.md,
+  base: {
+    borderRadius: layout.borderRadius.round,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
   },
-  fullWidth: {
-    width: '100%',
-  },
-  disabled: {
-    opacity: 0.5,
-  },
-  text: {
-    fontWeight: '600',
-  },
+  fullWidth: { width: '100%' },
+  disabled: { opacity: 0.4 },
+  text: { fontWeight: '700', letterSpacing: 0.2 },
 });

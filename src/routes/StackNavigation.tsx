@@ -15,10 +15,11 @@ const StackNavigation = () => {
   return (
     <Stack.Navigator
       screenOptions={{
+        contentStyle: { backgroundColor: '#1f1f23' },
         headerStyle: {
-          backgroundColor: 'white', // ✅ only backgroundColor is allowed here
+          backgroundColor: '#000',
         },
-        headerShadowVisible: false, // ✅ removes shadow/border across iOS + Android
+        headerShadowVisible: false, 
         headerTintColor: '#305FA1',
       }}
     >

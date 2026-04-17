@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
-import { layout, spacing } from '../../theme/spacing';
-import { colors } from '../../theme/colors';
+import { layout, spacing } from '../../theme';
+import { colors } from '../../theme';
 
 export const Card = ({ 
   children, 
