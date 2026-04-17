@@ -1,89 +1,26 @@
-import React, { useEffect, useLayoutEffect, useState } from 'react';
+import React, { useLayoutEffect } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
-  Linking,
-  Share,
   StyleSheet,
   ScrollView,
   ActivityIndicator,
-  Alert
 } from 'react-native';
-import { useRoute, useNavigation } from '@react-navigation/native';
-import { useNewsStore } from '../../store/useNewsStore';
-import { useBookmarkStore } from '../../store/useBookmarkStore';
 import { getRelativeTime } from '../../utils/storyUtils';
+import { useArticleDetail } from '../../hooks/useArticleDetails';
 
 const ArticleDetail = () => {
-  const route = useRoute();
-  const navigation = useNavigation();
-
-  const storyId = route.params?.storyId;
-
-  const { stories, fetchStoryDetails } = useNewsStore();
-  const story = storyId ? stories[storyId] : null;
-
-  const [loading, setLoading] = useState(!story);
-  const [error, setError] = useState(null);
-
-  const bookmarks = useBookmarkStore((state) => state.bookmarks);
-  const toggleBookmark = useBookmarkStore((state) => state.toggleBookmark);
-
-  const isBookmarked = bookmarks.includes(storyId);
-
-  useEffect(() => {
-    if (storyId && !story) {
-      fetchStoryDetails(storyId)
-        .then(() => setLoading(false))
-        .catch((err) => {
-          setError(err.message);
-          setLoading(false);
-        });
-    } else {
-      setLoading(false);
-    }
-  }, [storyId, story, fetchStoryDetails]);
-
-  const handleShare = async () => {
-    if (!story) return;
-    try {
-      await Share.share({
-        message: `${story.title || ''}\n${story.url || ''}`,
-        title: story.title,
-      });
-    } catch (error) {
-      console.log('Error sharing:', error);
-    }
-  };
-
-  const openLink = async () => {
-    if (!story?.url) {
-      Alert.alert('No Link', 'This article has no external link.');
-      return;
-    }
-    try {
-      const supported = await Linking.canOpenURL(story.url);
-      if (supported) {
-        await Linking.openURL(story.url);
-      } else {
-        Alert.alert('Error', 'Cannot open this URL');
-      }
-    } catch (error) {
-      console.log('Error opening link:', error);
-      Alert.alert('Error', 'Failed to open the link');
-    }
-  };
-
-  const handleBookmark = async () => {
-    if (storyId) {
-      await toggleBookmark(storyId);
-      Alert.alert(
-        isBookmarked ? 'Removed' : 'Bookmarked',
-        isBookmarked ? 'Story removed from bookmarks' : 'Story added to bookmarks'
-      );
-    }
-  };
+  const {
+    story,
+    loading,
+    error,
+    isBookmarked,
+    navigation,
+    handleShare,
+    openLink,
+    handleBookmark,
+  } = useArticleDetail();
 
   useLayoutEffect(() => {
     if (!story?.id) return;
