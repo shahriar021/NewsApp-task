@@ -1,34 +1,31 @@
-import React, { useEffect } from 'react';
-import {
-  View,
-  FlatList,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Alert,
-  ActivityIndicator
-} from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, FlatList, StyleSheet, Alert, Text } from 'react-native';
+import { Swipeable } from 'react-native-gesture-handler';
 import { useNavigation } from '@react-navigation/native';
 import { useBookmarkStore } from '../../store/useBookmarkStore';
 import { useNewsStore } from '../../store/useNewsStore';
+import { Card } from '../../components/shared/Card';
+import { LoadingSpinner } from '../../components/shared/LoadingSpinner';
+import { EmptyState } from '../../components/shared/Empty';
+import { Button } from '../../components/shared/Button';
+import { colors, spacing, typography } from '../../theme';
 
 const BookmarksScreen = () => {
   const navigation = useNavigation();
   const bookmarks = useBookmarkStore((state) => state.bookmarks);
   const toggleBookmark = useBookmarkStore((state) => state.toggleBookmark);
   const loadBookmarks = useBookmarkStore((state) => state.loadBookmarks);
-  const { stories, fetchStoryDetails } = useNewsStore();
+  const { stories } = useNewsStore();
   
-  const [loading, setLoading] = React.useState(true);
+  const [loading, setLoading] = useState(true);
   
   useEffect(() => {
-    // Load bookmarks when screen opens
     const load = async () => {
       await loadBookmarks();
       setLoading(false);
     };
     load();
-  }, []);
+  }, [loadBookmarks]);
   
   const bookmarkedStories = bookmarks
     .map(id => stories[id])
@@ -55,20 +52,49 @@ const BookmarksScreen = () => {
     );
   };
   
+  const renderRightActions = (storyId, storyTitle) => (
+    <View style={styles.deleteButtonContainer}>
+      <Button
+        title="Delete"
+        onPress={() => handleRemoveBookmark(storyId, storyTitle)}
+        variant="danger"
+        size="small"
+        style={styles.deleteButton}
+      />
+    </View>
+  );
+  
+  const renderItem = ({ item }) => (
+    <Swipeable
+      renderRightActions={() => renderRightActions(item.id, item.title)}
+      overshootRight={false}
+    >
+      <Card onPress={() => handleStoryPress(item.id)}>
+        <View style={styles.cardContent}>
+          <Text style={styles.title}>{item.title}</Text>
+          <View style={styles.metaInfo}>
+            <Text style={styles.author}>By: {item.by || 'Unknown'}</Text>
+            <Text style={styles.score}>⭐ {item.score || 0}</Text>
+          </View>
+          <View style={styles.bookmarkBadge}>
+            <Text style={styles.bookmarkIcon}>★</Text>
+          </View>
+        </View>
+      </Card>
+    </Swipeable>
+  );
+  
   if (loading) {
-    return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#FF6600" />
-      </View>
-    );
+    return <LoadingSpinner fullScreen />;
   }
   
   if (bookmarks.length === 0) {
     return (
-      <View style={styles.centerContainer}>
-        <Text style={styles.emptyText}>No bookmarks yet</Text>
-        <Text style={styles.subText}>Tap the ★ on any article to save it here</Text>
-      </View>
+      <EmptyState
+        icon="⭐"
+        title="No bookmarks yet"
+        message="Tap the ★ on any article to save it here"
+      />
     );
   }
   
@@ -76,91 +102,56 @@ const BookmarksScreen = () => {
     <FlatList
       data={bookmarkedStories}
       keyExtractor={(item) => item.id.toString()}
-      renderItem={({ item }) => (
-        <TouchableOpacity 
-          style={styles.storyItem}
-          onPress={() => handleStoryPress(item.id)}
-          onLongPress={() => handleRemoveBookmark(item.id, item.title)}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.title}>{item.title}</Text>
-          <View style={styles.metaInfo}>
-            <Text style={styles.author}>By: {item.by || 'Unknown'}</Text>
-            <Text style={styles.score}>⭐ {item.score || 0}</Text>
-          </View>
-          <View style={styles.bookmarkIndicator}>
-            <Text style={styles.bookmarkIcon}>★</Text>
-          </View>
-        </TouchableOpacity>
-      )}
+      renderItem={renderItem}
       contentContainerStyle={styles.listContainer}
+      showsVerticalScrollIndicator={false}
     />
   );
 };
 
 const styles = StyleSheet.create({
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-    backgroundColor: '#f5f5f5',
-  },
-  emptyText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    color: '#666',
-  },
-  subText: {
-    fontSize: 14,
-    color: '#999',
-    textAlign: 'center',
-  },
   listContainer: {
-    padding: 15,
-    backgroundColor: '#f5f5f5',
+    padding: spacing[12],
+    backgroundColor: colors.background,
   },
-  storyItem: {
-    backgroundColor: '#fff',
-    padding: 15,
-    marginBottom: 10,
-    borderRadius: 8,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
+  cardContent: {
     position: 'relative',
   },
   title: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 8,
-    color: '#000',
-    paddingRight: 30,
+    ...typography.bodyBold,
+    color: colors.gray[800],
+    marginBottom: spacing[8],
+    paddingRight: spacing[32],
   },
   metaInfo: {
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
   author: {
-    fontSize: 12,
-    color: '#666',
+    ...typography.caption,
+    color: colors.gray[600],
   },
   score: {
-    fontSize: 12,
-    color: '#FF6600',
-    fontWeight: 'bold',
+    ...typography.captionBold,
+    color: colors.primary,
   },
-  bookmarkIndicator: {
+  bookmarkBadge: {
     position: 'absolute',
-    top: 15,
-    right: 15,
+    top: 0,
+    right: 0,
   },
   bookmarkIcon: {
-    fontSize: 18,
-    color: '#FFD700',
+    fontSize: 20,
+    color: colors.primary,
+  },
+  deleteButtonContainer: {
+    justifyContent: 'center',
+    marginBottom: spacing[12],
+  },
+  deleteButton: {
+    height: '100%',
+    minHeight: 80,
+    borderRadius: 12,
   },
 });
 

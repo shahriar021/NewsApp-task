@@ -9,7 +9,7 @@ interface Props {
 }
 
 // Use React.memo so the list doesn't lag when you scroll
-const StoryItem = React.memo(({ story, onPress }: Props) => {
+export const StoryItem = React.memo(({ story, onPress }: Props) => {
   if (!story) return null;
 
   const domain = getDomain(story.url || '');

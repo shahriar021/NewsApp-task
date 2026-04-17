@@ -4,16 +4,16 @@ import {
   FlatList,
   TextInput,
   RefreshControl,
-  ActivityIndicator,
   StyleSheet,
-  TouchableOpacity,
-  Text
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useNewsStore } from '../../store/useNewsStore';
 import { useUIStore } from '../../store/uiStore';
-import StoryItem from '../../components/shared/StoryItem';
-import useNetworkStatus from '../../hooks/useNetworkStatus';
+import { StoryItem } from '../../components/shared/StoryItem';
+import { colors, spacing, typography, layout } from '../../theme';
+import { LoadingSpinner } from '../../components/shared/LoadingSpinner';
+import { EmptyState } from '../../components/shared/Empty';
+import { Button } from '../../components/shared/Button';
 
 const ArticleList = () => {
   const navigation = useNavigation();
@@ -24,27 +24,13 @@ const ArticleList = () => {
     fetchTopStories();
   }, []);
 
-  const { isConnected } = useNetworkStatus();
-
-// Add this after the header section
-{!isConnected && (
-  <View style={styles.offlineWarning}>
-    <Text style={styles.offlineWarningText}>
-      ⚠️ You are offline. Showing cached content.
-    </Text>
-  </View>
-)}
-
-
   const filteredAndSortedStories = useMemo(() => {
     let data = storyIds.map(id => stories[id]).filter(Boolean);
-
     if (searchQuery) {
       data = data.filter(story =>
         story.title.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
-
     return data.sort((a, b) => {
       if (sortOrder === 'score') return b.score - a.score;
       if (sortOrder === 'time') return b.time - a.time;
@@ -52,29 +38,23 @@ const ArticleList = () => {
     });
   }, [storyIds, stories, searchQuery, sortOrder]);
 
-  // IMPORTANT: Pass ONLY the ID
   const handleStoryPress = (storyId) => {
-    console.log('Navigating with story ID:', storyId);
-    navigation.navigate('ArticleDetail', { storyId: storyId });
+    navigation.navigate('ArticleDetail', { storyId });
   };
 
   if (isLoading && storyIds.length === 0) {
-    return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#FF6600" />
-        <Text style={styles.loadingText}>Loading top stories...</Text>
-      </View>
-    );
+    return <LoadingSpinner fullScreen message="Loading top stories..." />;
   }
 
   if (error && storyIds.length === 0) {
     return (
-      <View style={styles.centerContainer}>
-        <Text style={styles.errorText}>{error}</Text>
-        <TouchableOpacity onPress={fetchTopStories} style={styles.retryButton}>
-          <Text style={styles.retryButtonText}>Retry</Text>
-        </TouchableOpacity>
-      </View>
+      <EmptyState
+        icon="⚠️"
+        title="Oops!"
+        message={error}
+        buttonText="Try Again"
+        onButtonPress={fetchTopStories}
+      />
     );
   }
 
@@ -83,48 +63,46 @@ const ArticleList = () => {
       <View style={styles.header}>
         <TextInput
           placeholder="Search stories..."
-          placeholderTextColor="#999"
+          placeholderTextColor={colors.gray[400]}
           style={styles.searchInput}
           value={searchQuery}
           onChangeText={setSearchQuery}
           clearButtonMode="while-editing"
         />
-
-        <TouchableOpacity
-          onPress={() => setSortOrder(sortOrder === 'score' ? 'time' : 'score')}
-          style={styles.sortButton}
-        >
-          <Text style={styles.sortText}>
-            Sort by: {sortOrder === 'score' ? '⭐ Top Rated' : '🕒 Newest First'}
-          </Text>
-        </TouchableOpacity>
+        <View style={styles.sortContainer}>
+          <Button
+            title={`Sort by: ${sortOrder === 'score' ? '⭐ Top' : '🕒 New'}`}
+            onPress={() => setSortOrder(sortOrder === 'score' ? 'time' : 'score')}
+            variant="secondary"
+            size="small"
+          />
+        </View>
       </View>
 
       <FlatList
         data={filteredAndSortedStories}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
-          <StoryItem
-            story={item}
-            onPress={() => handleStoryPress(item.id)} // Pass ONLY the ID
-          />
+          <StoryItem story={item} onPress={() => handleStoryPress(item.id)} />
         )}
         refreshControl={
           <RefreshControl 
             refreshing={isLoading} 
             onRefresh={fetchTopStories}
-            colors={['#FF6600']}
+            colors={[colors.primary]}
+            tintColor={colors.primary}
           />
         }
         ListEmptyComponent={
           !isLoading ? (
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>
-                {searchQuery ? 'No stories match your search' : 'No stories available'}
-              </Text>
-            </View>
+            <EmptyState
+              icon="🔍"
+              title="No stories found"
+              message={searchQuery ? `No results for "${searchQuery}"` : "No stories available"}
+            />
           ) : null
         }
+        contentContainerStyle={styles.listContent}
       />
     </View>
   );
@@ -133,82 +111,29 @@ const ArticleList = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-    padding: 20,
-  },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 14,
-    color: '#666',
-  },
-  errorText: {
-    fontSize: 16,
-    color: '#ff4444',
-    marginBottom: 15,
-    textAlign: 'center',
-  },
-  retryButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    backgroundColor: '#FF6600',
-    borderRadius: 5,
-  },
-  retryButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
+    backgroundColor: colors.background,
   },
   header: {
-    padding: 12,
-    backgroundColor: '#fff',
+    backgroundColor: colors.white,
+    padding: spacing[12],
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: colors.gray[200],
   },
   searchInput: {
-    height: 42,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 8,
-    paddingHorizontal: 15,
-    marginBottom: 8,
+    height: 44,
+    backgroundColor: colors.gray[100],
+    borderRadius: layout.borderRadius.md,
+    paddingHorizontal: spacing[16],
     fontSize: 16,
+    marginBottom: spacing[8],
   },
-  sortButton: {
-    alignSelf: 'flex-end',
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 5,
-    backgroundColor: '#FFF3E6',
+  sortContainer: {
+    alignItems: 'flex-end',
   },
-  sortText: {
-    color: '#FF6600',
-    fontWeight: '600',
-    fontSize: 12,
+  listContent: {
+    padding: spacing[12],
+    paddingBottom: spacing[20],
   },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingTop: 50,
-  },
-  emptyText: {
-    textAlign: 'center',
-    fontSize: 16,
-    color: '#999',
-  },
-  offlineWarning: {
-  backgroundColor: '#ff4444',
-  padding: 10,
-  alignItems: 'center',
-},
-offlineWarningText: {
-  color: '#fff',
-  fontSize: 12,
-},
 });
 
 export default ArticleList;
