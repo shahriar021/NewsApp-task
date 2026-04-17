@@ -1,42 +1,70 @@
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
-import { MMKV } from 'react-native-mmkv';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Initialize MMKV
-const storage = new MMKV();
+const STORAGE_KEY = 'news-bookmarks';
 
-// Create a small wrapper so Zustand can talk to MMKV
-const zustandStorage = {
-  setItem: (name: string, value: string) => storage.set(name, value),
-  getItem: (name: string) => storage.getString(name) ?? null,
-  removeItem: (name: string) => storage.delete(name),
-};
+const useBookmarkStore = create((set, get) => ({
+  bookmarks: [],
+  
+  // Load bookmarks from AsyncStorage
+  loadBookmarks: async () => {
+    try {
+      const saved = await AsyncStorage.getItem(STORAGE_KEY);
+      console.log('📖 Loading bookmarks from AsyncStorage:', saved);
+      
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        set({ bookmarks: parsed });
+        console.log('✅ Bookmarks loaded:', parsed.length, 'items');
+      } else {
+        console.log('No saved bookmarks found');
+      }
+    } catch (error) {
+      console.error('Failed to load bookmarks:', error);
+    }
+  },
+  
+  // Toggle bookmark and save
+  toggleBookmark: async (id) => {
+    try {
+      const currentBookmarks = get().bookmarks;
+      const exists = currentBookmarks.includes(id);
+      
+      let newBookmarks;
+      if (exists) {
+        newBookmarks = currentBookmarks.filter((bid) => bid !== id);
+        console.log('🔖 Removed bookmark:', id);
+      } else {
+        newBookmarks = [...currentBookmarks, id];
+        console.log('🔖 Added bookmark:', id);
+      }
+      
+      // Save to AsyncStorage
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(newBookmarks));
+      console.log('💾 Saved to AsyncStorage:', newBookmarks.length, 'bookmarks');
+      
+      // Update state
+      set({ bookmarks: newBookmarks });
+    } catch (error) {
+      console.error('Failed to toggle bookmark:', error);
+    }
+  },
+  
+  // Check if bookmarked
+  isBookmarked: (id) => {
+    return get().bookmarks.includes(id);
+  },
+  
+  // Clear all bookmarks
+  clearBookmarks: async () => {
+    try {
+      await AsyncStorage.removeItem(STORAGE_KEY);
+      set({ bookmarks: [] });
+      console.log('🗑️ All bookmarks cleared');
+    } catch (error) {
+      console.error('Failed to clear bookmarks:', error);
+    }
+  },
+}));
 
-interface BookmarkState {
-  items: any[];
-  addBookmark: (item: any) => void;
-  removeBookmark: (id: number) => void;
-}
-
-export const useBookmarkStore = create<BookmarkState>()(
-  persist(
-    set => ({
-      items: [],
-      addBookmark: item =>
-        set(state => ({
-          // Only add if it's not already bookmarked
-          items: state.items.some(i => i.id === item.id)
-            ? state.items
-            : [...state.items, item],
-        })),
-      removeBookmark: id =>
-        set(state => ({
-          items: state.items.filter(i => i.id !== id),
-        })),
-    }),
-    {
-      name: 'bookmark-storage', // Unique name for MMKV key
-      storage: createJSONStorage(() => zustandStorage),
-    },
-  ),
-);
+export { useBookmarkStore };

@@ -15,14 +15,10 @@ const StackNavigation = () => {
   return (
     <Stack.Navigator
       screenOptions={{
-        cardStyle: {
-          backgroundColor: 'white',
-        },
         headerStyle: {
-          elevation: 0,
-          shadowOpacity: 0,
-          borderBottomWidth: 0,
+          backgroundColor: 'white', // ✅ only backgroundColor is allowed here
         },
+        headerShadowVisible: false, // ✅ removes shadow/border across iOS + Android
         headerTintColor: '#305FA1',
       }}
     >
