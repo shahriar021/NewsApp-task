@@ -1,16 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import { View, FlatList, StyleSheet, Alert, Text } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
-import { useNavigation } from '@react-navigation/native';
+import {  useNavigation } from '@react-navigation/native';
 import { useBookmarkStore } from '../../store/useBookmarkStore';
 import { useNewsStore } from '../../store/useNewsStore';
 import { Card } from '../../components/shared/Card';
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner';
 import { EmptyState } from '../../components/shared/Empty';
-import { colors, spacing, typography } from '../../theme';
+import {  spacing } from '../../theme';
+
+import { RootStackParamList } from '../../types/navigation';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Story } from '../../types';
+
+type ArticleDetailNavigationProp = NativeStackNavigationProp<RootStackParamList, 'ArticleDetail'>;
 
 const BookmarksScreen = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<ArticleDetailNavigationProp>();
   const bookmarks = useBookmarkStore((state) => state.bookmarks);
   const toggleBookmark = useBookmarkStore((state) => state.toggleBookmark);
   const loadBookmarks = useBookmarkStore((state) => state.loadBookmarks);
@@ -30,11 +36,11 @@ const BookmarksScreen = () => {
     .map(id => stories[id])
     .filter(Boolean);
 
-  const handleStoryPress = (storyId) => {
+  const handleStoryPress = (storyId:number) => {
     navigation.navigate('ArticleDetail', { storyId });
   };
 
-  const handleRemoveBookmark = (storyId, storyTitle) => {
+  const handleRemoveBookmark = (storyId:number, storyTitle:string) => {
     Alert.alert(
       'Remove Bookmark',
       `Remove "${storyTitle}" from your bookmarks?`,
@@ -49,7 +55,7 @@ const BookmarksScreen = () => {
     );
   };
 
-  const renderRightActions = (storyId, storyTitle) => (
+  const renderRightActions = (storyId:number, storyTitle:string) => (
     <View style={styles.swipeAction}>
       <View
         style={styles.deleteBtn}
@@ -61,7 +67,7 @@ const BookmarksScreen = () => {
     </View>
   );
 
-  const renderItem = ({ item }) => (
+  const renderItem = ({ item }: { item: Story }) => (
     <Swipeable
       renderRightActions={() => renderRightActions(item.id, item.title)}
       overshootRight={false}

@@ -4,8 +4,9 @@ import { View, Text, Platform, useWindowDimensions } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import ArticleList from '../screens/ArticleList/ArticleList';
 import Bookmarks from '../screens/Bookmarks/Bookmarks';
+import { BottomTabParamList } from '../types/navigation';
 
-const BottomTabs = createBottomTabNavigator();
+const BottomTabs = createBottomTabNavigator<BottomTabParamList>();
 
 const ACTIVE_BG_COLOR = '#FF4D00';
 const ACTIVE_ICON_COLOR = '#FFFFFF';
@@ -35,7 +36,7 @@ export const BottomNavigation = () => {
           headerShown: false,
           tabBarStyle: {
             backgroundColor: '#16161D',
-            borderTopWidth: 0,        // remove border
+            borderTopWidth: 0,
             elevation: 0,
             marginHorizontal: 17,
             borderRadius: 60,
@@ -45,10 +46,10 @@ export const BottomNavigation = () => {
             height: 68,
             paddingBottom: 5,
             paddingTop: 17,
-            position: 'absolute',    // ← add this
-            bottom: 0,               // ← add this
-            left: 0,                 // ← add this
-            right: 0,                // ← add this
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
           },
 
           tabBarShowLabel: false,

@@ -3,13 +3,14 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Story } from '../types';
 import ArticleDetail from '../screens/ArticleDetail/ArticleDetail';
 import { BottomNavigation } from './BottomNavigation';
+import { RootStackParamList } from '../types/navigation';
 
 export type StackParamList = {
   BottomScreen: undefined;
   ArticleDetail: { story: Story };
 };
 
-const Stack = createNativeStackNavigator<StackParamList>();
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const StackNavigation = () => {
   return (

@@ -3,9 +3,13 @@ import { useNavigation } from '@react-navigation/native';
 import { useNewsStore } from '../store/useNewsStore';
 import { useUIStore } from '../store/uiStore';
 import { Story } from '../types';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../types/navigation';
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export const useArticleList = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp>();
   const { storyIds, stories, fetchTopStories, isLoading, error } = useNewsStore();
   const { searchQuery, setSearchQuery, sortOrder, setSortOrder } = useUIStore();
 
@@ -26,7 +30,7 @@ export const useArticleList = () => {
   }, [storyIds, stories, searchQuery, sortOrder]);
 
   const handleStoryPress = (storyId: number) => {
-    navigation.navigate('ArticleDetail' as never, { storyId } as never);
+    navigation.navigate('ArticleDetail' , { storyId } );
   };
 
   return {

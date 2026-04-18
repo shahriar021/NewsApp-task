@@ -1,9 +1,17 @@
 import React from 'react';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, ViewStyle } from 'react-native';
 import { layout, spacing } from '../../theme';
 import { colors } from '../../theme';
 
-export const Card = ({ 
+interface CardProps {
+  children: React.ReactNode;
+  onPress?: () => void;
+  style?: ViewStyle;
+  elevation?: boolean;
+  padding?: 'sm' | 'md' | 'lg' | 'none';
+}
+
+export const Card: React.FC<CardProps> = ({ 
   children, 
   onPress, 
   style, 

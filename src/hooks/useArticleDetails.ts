@@ -1,19 +1,25 @@
 import { useEffect, useLayoutEffect, useState } from 'react';
 import { Share, Alert, Linking } from 'react-native';
-import { useRoute, useNavigation } from '@react-navigation/native';
+import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { useNewsStore } from '../store/useNewsStore';
 import { useBookmarkStore } from '../store/useBookmarkStore';
+import { RootStackParamList } from '../types/navigation';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
+type ArticleDetailRouteProp = RouteProp<RootStackParamList, 'ArticleDetail'>;
+
+type ArticleDetailNavigationProp = NativeStackNavigationProp<RootStackParamList, 'ArticleDetail'>;
 
 export const useArticleDetail = () => {
-  const route = useRoute();
-  const navigation = useNavigation();
+    const route = useRoute<ArticleDetailRouteProp>();
+  const navigation = useNavigation<ArticleDetailNavigationProp>();
 
   const storyId = route.params?.storyId;
 
   const { stories, fetchStoryDetails } = useNewsStore();
   const story = storyId ? stories[storyId] : null;
 
-  const [loading, setLoading] = useState(!story);
+  const [loading, setLoading] = useState<boolean>(!story);
   const [error, setError] = useState<string | null>(null);
 
   const bookmarks = useBookmarkStore((state) => state.bookmarks);

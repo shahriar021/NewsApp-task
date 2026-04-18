@@ -9,9 +9,6 @@ import {
   TouchableOpacity,
   StatusBar,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { useNewsStore } from '../../store/useNewsStore';
-import { useUIStore } from '../../store/uiStore';
 import { StoryItem } from '../../components/shared/StoryItem';
 import { colors, spacing, layout } from '../../theme';
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner';
